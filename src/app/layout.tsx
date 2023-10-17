@@ -10,7 +10,7 @@ import { AppConfig } from '@/utils/AppConfig';
 import { resolver, theme } from '@/utils/theme';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(AppConfig.site),
+  metadataBase: new URL(AppConfig.site as string),
   alternates: {
     canonical: '/',
     languages: {
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
   ],
 };
 
-const MainAppShell = dynamic(() => import('./MainAppShell'));
+const MainAppShell = dynamic(() => import('@/components/_main/MainAppShell'));
 
 export default function RootLayout({ children }: { children: any }) {
   return (

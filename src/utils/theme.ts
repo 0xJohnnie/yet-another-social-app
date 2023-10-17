@@ -39,6 +39,7 @@ const ButtonDefaultProps: Partial<ButtonProps> = {
   },
   variant: _variant,
   size: _buttonSize, //  "xs" | "sm" | "md" | "lg" | "xl"
+  radius: _buttonRadius,
 };
 
 const isLightTheme = getCookie('themeCookie') === 'light' ?? false;

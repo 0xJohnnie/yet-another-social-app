@@ -1,11 +1,9 @@
-'use client';
-
 import { ActionIcon, Group, Stack } from '@mantine/core';
 import { IconBrandGithub, IconBrandTwitter } from '@tabler/icons-react';
 
 import { _iconSize } from '@/utils/constants';
 
-export default function Brand() {
+export default function CTA() {
   return (
     <Stack>
       <Group justify="center">
