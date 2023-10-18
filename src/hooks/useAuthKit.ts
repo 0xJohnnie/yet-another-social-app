@@ -1,8 +1,22 @@
 import { ExternalProvider } from '@ethersproject/providers';
-import { Web3AuthModalPack } from '@safe-global/auth-kit';
-import { CHAIN_NAMESPACES, WALLET_ADAPTERS } from '@web3auth/base';
+import {
+  Web3AuthEventListener,
+  Web3AuthModalPack,
+} from '@safe-global/auth-kit';
+import { WalletConnectModal } from '@walletconnect/modal';
+import {
+  ADAPTER_EVENTS,
+  CHAIN_NAMESPACES,
+  MULTI_CHAIN_ADAPTERS,
+  WALLET_ADAPTERS,
+} from '@web3auth/base';
 import { Web3AuthOptions } from '@web3auth/modal';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
+import { WalletConnectV1Adapter } from '@web3auth/wallet-connect-v1-adapter';
+import {
+  getWalletConnectV2Settings,
+  WalletConnectV2Adapter,
+} from '@web3auth/wallet-connect-v2-adapter';
 import { useEffect, useState } from 'react';
 
 import { AppConfig } from '@/utils/AppConfig';
@@ -13,16 +27,21 @@ interface IuseAuthKit {
   isLoadingWeb3Auth: boolean;
   isAuthenticated: boolean;
   web3Provider: ExternalProvider | undefined;
-  web3Auth: Web3AuthModalPack | undefined;
+  web3AuthPack: Web3AuthModalPack | undefined;
   ownerAddress: string;
   safes: string[];
   safeSelected: string;
 }
 
+const connectedHandler: Web3AuthEventListener = (data) =>
+  console.log('CONNECTED', data);
+const disconnectedHandler: Web3AuthEventListener = (data) =>
+  console.log('DISCONNECTED', data);
+
 const useAuthKit = (): IuseAuthKit => {
   const [isLoadingWeb3Auth, setIsLoadingWeb3Auth] = useState<boolean>(true);
 
-  const [web3Auth, setWeb3Auth] = useState<Web3AuthModalPack>();
+  const [web3AuthPack, setWeb3AuthPack] = useState<Web3AuthModalPack>();
   const [web3Provider, setWeb3Provider] = useState<ExternalProvider>();
 
   const [safes, setSafes] = useState<string[]>([]);
@@ -55,6 +74,7 @@ const useAuthKit = (): IuseAuthKit => {
           ],
         },
       };
+
       const modalConfig = {
         [WALLET_ADAPTERS.TORUS_EVM]: {
           label: 'torus',
@@ -62,7 +82,8 @@ const useAuthKit = (): IuseAuthKit => {
         },
         [WALLET_ADAPTERS.METAMASK]: {
           label: 'metamask',
-          showOnModal: true,
+          showOnDesktop: true,
+          showOnMobile: false,
         },
         [WALLET_ADAPTERS.OPENLOGIN]: {
           label: 'openlogin',
@@ -73,8 +94,9 @@ const useAuthKit = (): IuseAuthKit => {
             },
           },
         },
+
         [WALLET_ADAPTERS.WALLET_CONNECT_V1]: {
-          label: 'wallet_connect',
+          label: 'Walletconnect_V1',
           showOnModal: false,
         },
       };
@@ -85,7 +107,6 @@ const useAuthKit = (): IuseAuthKit => {
         },
         adapterSettings: {
           clientId: process.env.NEXT_PUBLIC_WEB3_AUTH_CLIENT_ID_MAINNET,
-
           network: 'mainnet',
           uxMode: 'popup',
           whiteLabel: {
@@ -98,11 +119,38 @@ const useAuthKit = (): IuseAuthKit => {
         txServiceUrl: process.env.NEXT_PUBLIC_TX_SERVICE_URL_POLYGON,
       });
 
+      const defaultWcSettings = await getWalletConnectV2Settings(
+        'eip155',
+        [1],
+        process.env.NEXT_PUBLIC_WALLET_CONNECT_V2_ID,
+      );
+
+      const walletConnectV2Adapter = new WalletConnectV2Adapter({
+        adapterSettings: { ...defaultWcSettings.adapterSettings },
+        loginSettings: { ...defaultWcSettings.loginSettings },
+      });
+
+      const walletConnectV1Adapter = new WalletConnectV1Adapter({
+        clientId: process.env.NEXT_PUBLIC_WEB3_AUTH_CLIENT_ID_MAINNET,
+        chainConfig: {
+          chainNamespace: CHAIN_NAMESPACES.EIP155,
+          chainId: process.env.NEXT_PUBLIC_CHAIN_ID,
+          rpcTarget: process.env.NEXT_PUBLIC_RPC_URL_POLYGON,
+        },
+        sessionTime: 3600, // 1 day in seconds
+      });
+
+      Web3AuthModal.web3Auth?.configureAdapter(walletConnectV2Adapter);
+
       await Web3AuthModal.init({
         options,
-        adapters: [openloginAdapter],
+        adapters: [walletConnectV2Adapter, openloginAdapter],
         modalConfig,
       });
+
+      Web3AuthModal.subscribe(ADAPTER_EVENTS.CONNECTED, connectedHandler);
+
+      Web3AuthModal.subscribe(ADAPTER_EVENTS.DISCONNECTED, disconnectedHandler);
 
       if (Web3AuthModal.getProvider()) {
         const { safes, eoa } = await Web3AuthModal.signIn();
@@ -118,23 +166,23 @@ const useAuthKit = (): IuseAuthKit => {
         setOwnerAddress(eoa);
         setWeb3Provider(provider);
       }
-      setWeb3Auth(Web3AuthModal);
+      setWeb3AuthPack(Web3AuthModal);
       setIsLoadingWeb3Auth(false);
     };
 
-    if (!web3Auth) {
+    if (!web3AuthPack) {
       init();
     }
-  }, [web3Auth]);
+  }, [web3AuthPack]);
 
   const loginWeb3Auth = async () => {
-    if (!web3Auth) {
+    if (!web3AuthPack) {
       return;
     }
 
     try {
-      const { safes, eoa } = await web3Auth.signIn();
-      const provider = web3Auth.getProvider() as ExternalProvider;
+      const { safes, eoa } = await web3AuthPack.signIn();
+      const provider = web3AuthPack.getProvider() as ExternalProvider;
 
       console.log('useAuthKit  eoa', eoa);
       console.log('useAuthKit safes', safes);
@@ -148,12 +196,12 @@ const useAuthKit = (): IuseAuthKit => {
   };
 
   const logoutWeb3Auth = () => {
-    if (!web3Auth) {
+    if (!web3AuthPack) {
       return;
     }
 
     try {
-      web3Auth?.signOut();
+      web3AuthPack?.signOut();
       setOwnerAddress('');
       setSafes([]);
       setWeb3Provider(undefined);
@@ -168,7 +216,7 @@ const useAuthKit = (): IuseAuthKit => {
     isLoadingWeb3Auth,
     isAuthenticated,
     web3Provider,
-    web3Auth,
+    web3AuthPack,
     ownerAddress,
     safes,
     safeSelected,

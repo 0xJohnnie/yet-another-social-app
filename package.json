@@ -30,9 +30,12 @@
     "@safe-global/safe-react-components": "^2.0.6",
     "@tabler/icons-react": "^2.39.0",
     "@vercel/analytics": "^1.1.1",
-    "@web3auth/base": "4.6.0",
-    "@web3auth/modal": "4.6.2",
-    "@web3auth/openlogin-adapter": "4.6.0",
+    "@walletconnect/types": "^2.10.2",
+    "@web3auth/base": "5.2.0",
+    "@web3auth/modal": "5.2.0",
+    "@web3auth/openlogin-adapter": "5.2.0",
+    "@web3auth/wallet-connect-v1-adapter": "5.2.0",
+    "@web3auth/wallet-connect-v2-adapter": "5.2.0",
     "alchemy-sdk": "^2.10.1",
     "cookies-next": "^4.0.0",
     "dayjs": "^1.11.10",
@@ -78,7 +81,9 @@
       "@safe-global/auth-kit",
       "@web3auth/base",
       "@web3auth/modal",
-      "@web3auth/openlogin-adapter"
+      "@web3auth/openlogin-adapter",
+      "@web3auth/wallet-connect-v1-adapter",
+      "@web3auth/wallet-connect-v2-adapter"
     ]
   }
 }
