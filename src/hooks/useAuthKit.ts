@@ -35,6 +35,7 @@ const useAuthKit = (): IuseAuthKit => {
     const init = async () => {
       const options: Web3AuthOptions = {
         clientId: process.env.NEXT_PUBLIC_WEB3_AUTH_CLIENT_ID_MAINNET,
+        web3AuthNetwork: 'mainnet',
         chainConfig: {
           chainNamespace: CHAIN_NAMESPACES.EIP155,
           chainId: process.env.NEXT_PUBLIC_CHAIN_ID,

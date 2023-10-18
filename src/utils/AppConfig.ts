@@ -1,4 +1,9 @@
 import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export const AppConfig = {
   site_name: 'YASA',
@@ -14,7 +19,10 @@ export const AppConfig = {
     'YASA - A cross-chain event management and social dApp that supports Account Abstraction',
   author: { name: '0xJohnnie', site: 'https://linktr.ee/0xJohnnie' },
   locale: 'en',
-  version: `${dayjs().format('YYYY-MM-DD @ HH:mm:ss').toString()} ${
+  version: `${dayjs
+    .tz(dayjs(), process.env.NEXT_PUBLIC_TIME_ZONE)
+    .format('YYYY-MM-DD @ HH:mm:ss')
+    .toString()} ${
     process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA.slice(0, 6) ?? ''
   }`.trim(),
 };
