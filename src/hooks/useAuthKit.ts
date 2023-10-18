@@ -84,6 +84,9 @@ const useAuthKit = (): IuseAuthKit => {
           mfaLevel: 'none',
         },
         adapterSettings: {
+          clientId: process.env.NEXT_PUBLIC_WEB3_AUTH_CLIENT_ID_MAINNET,
+
+          network: 'mainnet',
           uxMode: 'popup',
           whiteLabel: {
             name: 'YASA',
