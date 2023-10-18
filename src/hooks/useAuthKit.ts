@@ -97,6 +97,10 @@ const useAuthKit = (): IuseAuthKit => {
 
         [WALLET_ADAPTERS.WALLET_CONNECT_V1]: {
           label: 'Walletconnect_V1',
+          showOnModal: true,
+        },
+        [WALLET_ADAPTERS.WALLET_CONNECT_V2]: {
+          label: 'Walletconnect_V2',
           showOnModal: false,
         },
       };
@@ -140,11 +144,11 @@ const useAuthKit = (): IuseAuthKit => {
         sessionTime: 3600, // 1 day in seconds
       });
 
-      Web3AuthModal.web3Auth?.configureAdapter(walletConnectV2Adapter);
+      Web3AuthModal.web3Auth?.configureAdapter(walletConnectV1Adapter);
 
       await Web3AuthModal.init({
         options,
-        adapters: [walletConnectV2Adapter, openloginAdapter],
+        adapters: [walletConnectV1Adapter, openloginAdapter],
         modalConfig,
       });
 
