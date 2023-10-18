@@ -1,23 +1,18 @@
 import { ExternalProvider } from '@ethersproject/providers';
+import detectEthereumProvider from '@metamask/detect-provider';
 import {
   Web3AuthEventListener,
   Web3AuthModalPack,
 } from '@safe-global/auth-kit';
-import { WalletConnectModal } from '@walletconnect/modal';
 import {
   ADAPTER_EVENTS,
   CHAIN_NAMESPACES,
-  MULTI_CHAIN_ADAPTERS,
   WALLET_ADAPTERS,
 } from '@web3auth/base';
 import { Web3AuthOptions } from '@web3auth/modal';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
-import { WalletConnectV1Adapter } from '@web3auth/wallet-connect-v1-adapter';
-import {
-  getWalletConnectV2Settings,
-  WalletConnectV2Adapter,
-} from '@web3auth/wallet-connect-v2-adapter';
 import { useEffect, useState } from 'react';
+import { isMobile } from 'react-device-detect';
 
 import { AppConfig } from '@/utils/AppConfig';
 
@@ -52,6 +47,13 @@ const useAuthKit = (): IuseAuthKit => {
 
   useEffect(() => {
     const init = async () => {
+      const providerExist = (await detectEthereumProvider()) as boolean;
+      const showAdapter = providerExist && !isMobile;
+
+      const web3auth = new Web3AuthModalPack({
+        txServiceUrl: process.env.NEXT_PUBLIC_TX_SERVICE_URL_POLYGON,
+      });
+
       const options: Web3AuthOptions = {
         clientId: process.env.NEXT_PUBLIC_WEB3_AUTH_CLIENT_ID_MAINNET,
         web3AuthNetwork: 'mainnet',
@@ -82,8 +84,7 @@ const useAuthKit = (): IuseAuthKit => {
         },
         [WALLET_ADAPTERS.METAMASK]: {
           label: 'metamask',
-          showOnDesktop: true,
-          showOnMobile: false,
+          showOnModal: showAdapter,
         },
         [WALLET_ADAPTERS.OPENLOGIN]: {
           label: 'openlogin',
@@ -94,13 +95,10 @@ const useAuthKit = (): IuseAuthKit => {
             },
           },
         },
-
         [WALLET_ADAPTERS.WALLET_CONNECT_V1]: {
-          label: 'Walletconnect_V1',
-          showOnModal: true,
-        },
-        [WALLET_ADAPTERS.WALLET_CONNECT_V2]: {
-          label: 'Walletconnect_V2',
+          label: 'wallet_connect_V1',
+          showOnMobile: false,
+          showOnDesktop: false,
           showOnModal: false,
         },
       };
@@ -119,46 +117,18 @@ const useAuthKit = (): IuseAuthKit => {
         },
       });
 
-      const Web3AuthModal = new Web3AuthModalPack({
-        txServiceUrl: process.env.NEXT_PUBLIC_TX_SERVICE_URL_POLYGON,
-      });
-
-      const defaultWcSettings = await getWalletConnectV2Settings(
-        'eip155',
-        [1],
-        process.env.NEXT_PUBLIC_WALLET_CONNECT_V2_ID,
-      );
-
-      const walletConnectV2Adapter = new WalletConnectV2Adapter({
-        adapterSettings: { ...defaultWcSettings.adapterSettings },
-        loginSettings: { ...defaultWcSettings.loginSettings },
-      });
-
-      const walletConnectV1Adapter = new WalletConnectV1Adapter({
-        clientId: process.env.NEXT_PUBLIC_WEB3_AUTH_CLIENT_ID_MAINNET,
-        chainConfig: {
-          chainNamespace: CHAIN_NAMESPACES.EIP155,
-          chainId: process.env.NEXT_PUBLIC_CHAIN_ID,
-          rpcTarget: process.env.NEXT_PUBLIC_RPC_URL_POLYGON,
-        },
-        sessionTime: 3600, // 1 day in seconds
-      });
-
-      Web3AuthModal.web3Auth?.configureAdapter(walletConnectV1Adapter);
-
-      await Web3AuthModal.init({
+      await web3auth.init({
         options,
-        adapters: [walletConnectV1Adapter, openloginAdapter],
+        adapters: [openloginAdapter],
         modalConfig,
       });
 
-      Web3AuthModal.subscribe(ADAPTER_EVENTS.CONNECTED, connectedHandler);
+      web3auth.subscribe(ADAPTER_EVENTS.CONNECTED, connectedHandler);
+      web3auth.subscribe(ADAPTER_EVENTS.DISCONNECTED, disconnectedHandler);
 
-      Web3AuthModal.subscribe(ADAPTER_EVENTS.DISCONNECTED, disconnectedHandler);
-
-      if (Web3AuthModal.getProvider()) {
-        const { safes, eoa } = await Web3AuthModal.signIn();
-        const provider = Web3AuthModal.getProvider() as ExternalProvider;
+      if (web3auth.getProvider()) {
+        const { safes, eoa } = await web3auth.signIn();
+        const provider = web3auth.getProvider() as ExternalProvider;
 
         console.log('useAuthKit  eoa', eoa);
         console.log('useAuthKit safes', safes);
@@ -170,14 +140,12 @@ const useAuthKit = (): IuseAuthKit => {
         setOwnerAddress(eoa);
         setWeb3Provider(provider);
       }
-      setWeb3AuthPack(Web3AuthModal);
+      setWeb3AuthPack(web3auth);
       setIsLoadingWeb3Auth(false);
     };
 
-    if (!web3AuthPack) {
-      init();
-    }
-  }, [web3AuthPack]);
+    init();
+  }, []);
 
   const loginWeb3Auth = async () => {
     if (!web3AuthPack) {

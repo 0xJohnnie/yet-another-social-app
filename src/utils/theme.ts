@@ -96,10 +96,10 @@ export const theme = createTheme({
       '#f0eaff',
       //  3rd shade in dark mode as uneditable text color & form icon
       '#b199e7',
-      //  4th shade UNKNOWN
+      //  4th shade is unknown
       '#666980',
-      //  5th shade in dark mode as form borders & disabled button color & URL
-      '#868AB3',
+      //  5th shade in dark mode as form borders & disabled button color & URL + Skeleton background
+      '#222',
       //   6th shade in dark mode as button text and border
       '#696969',
       // 7th shade in dark mode as form bg + light mode as active button
