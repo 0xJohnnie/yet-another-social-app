@@ -75,7 +75,9 @@ function MainAppShell({ children }: { children: React.ReactNode }) {
 
   const { isRefreshing } = usePullToRefresh({
     onRefresh: () => {
-      router.refresh();
+      if (!isDeployingSafe) {
+        router.refresh();
+      }
     },
     maximumPullLength: MAXIMUM_PULL_LENGTH,
     refreshThreshold: REFRESH_THRESHOLD,
