@@ -4,7 +4,7 @@ export const _accentColor = '#45248f'; //#311a67
 //'#E00890';
 
 // Default size is sm
-export const _buttonSize = 'lg';
+export const _buttonSize = 'md';
 
 // Default size is sm //  'xs' | 'sm' | 'md' | 'lg' | 'xl'
 export const _buttonRadius = 'md';

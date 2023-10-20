@@ -17,6 +17,9 @@ const withPWA = require('@ducanh2912/next-pwa').default({
 
 const nextConfig = withBundleAnalyzer(
   withPWA({
+    experimental: {
+      serverActions: true,
+    },
     eslint: {
       ignoreDuringBuilds: false,
     },

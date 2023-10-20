@@ -1,4 +1,5 @@
-import { ExternalProvider } from '@ethersproject/providers';
+'use client';
+
 import detectEthereumProvider from '@metamask/detect-provider';
 import {
   Web3AuthEventListener,
@@ -11,21 +12,26 @@ import {
 } from '@web3auth/base';
 import { Web3AuthOptions } from '@web3auth/modal';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
+import { ethers } from 'ethers';
 import { useEffect, useState } from 'react';
 import { isMobile } from 'react-device-detect';
 
 import { AppConfig } from '@/utils/AppConfig';
 
+import { deploySafe } from './deploySafe';
+
 interface IuseAuthKit {
   loginWeb3Auth: () => void;
   logoutWeb3Auth: () => void;
+  setSafes: (safeAdd: string[]) => void;
   isLoadingWeb3Auth: boolean;
   isAuthenticated: boolean;
-  web3Provider: ExternalProvider | undefined;
+  web3Provider?: ethers.providers.Web3Provider;
   web3AuthPack: Web3AuthModalPack | undefined;
   ownerAddress: string;
   safes: string[];
   safeSelected: string;
+  isDeployingSafe: boolean;
 }
 
 const connectedHandler: Web3AuthEventListener = (data) =>
@@ -36,8 +42,11 @@ const disconnectedHandler: Web3AuthEventListener = (data) =>
 const useAuthKit = (): IuseAuthKit => {
   const [isLoadingWeb3Auth, setIsLoadingWeb3Auth] = useState<boolean>(true);
 
+  const [isDeployingSafe, setIsDeployingSafe] = useState<boolean>(false);
+
   const [web3AuthPack, setWeb3AuthPack] = useState<Web3AuthModalPack>();
-  const [web3Provider, setWeb3Provider] = useState<ExternalProvider>();
+  const [web3Provider, setWeb3Provider] =
+    useState<ethers.providers.Web3Provider>();
 
   const [safes, setSafes] = useState<string[]>([]);
   const [safeSelected, setSafeSelected] = useState<string>('');
@@ -85,6 +94,8 @@ const useAuthKit = (): IuseAuthKit => {
         [WALLET_ADAPTERS.METAMASK]: {
           label: 'metamask',
           showOnModal: showAdapter,
+          showOnMobile: showAdapter,
+          showOnDesktop: true,
         },
         [WALLET_ADAPTERS.OPENLOGIN]: {
           label: 'openlogin',
@@ -128,17 +139,19 @@ const useAuthKit = (): IuseAuthKit => {
 
       if (web3auth.getProvider()) {
         const { safes, eoa } = await web3auth.signIn();
-        const provider = web3auth.getProvider() as ExternalProvider;
+        const provider =
+          web3auth.getProvider() as ethers.providers.ExternalProvider;
 
         console.log('useAuthKit  eoa', eoa);
-        console.log('useAuthKit safes', safes);
+        console.dir('useAuthKit safes', safes);
 
         if (safes && safes.length > 0) {
           setSafes(safes || []);
           setSafeSelected(safes[0]);
         }
+
         setOwnerAddress(eoa);
-        setWeb3Provider(provider);
+        setWeb3Provider(new ethers.providers.Web3Provider(provider));
       }
       setWeb3AuthPack(web3auth);
       setIsLoadingWeb3Auth(false);
@@ -154,14 +167,26 @@ const useAuthKit = (): IuseAuthKit => {
 
     try {
       const { safes, eoa } = await web3AuthPack.signIn();
-      const provider = web3AuthPack.getProvider() as ExternalProvider;
+      const provider =
+        web3AuthPack.getProvider() as ethers.providers.ExternalProvider;
 
       console.log('useAuthKit  eoa', eoa);
-      console.log('useAuthKit safes', safes);
+      console.dir('useAuthKit safes', safes);
 
       setOwnerAddress(eoa);
       setSafes(safes || []);
-      setWeb3Provider(provider);
+      setSafeSelected(safes && safes?.length > 0 ? safes[0] : '');
+      setWeb3Provider(new ethers.providers.Web3Provider(provider));
+
+      if (safes && safes.length === 0) {
+        setIsDeployingSafe(true);
+
+        const safeAddress = await deploySafe(eoa);
+
+        safeAddress.length > 1 && setSafes([...safes, safeAddress]);
+        setSafeSelected(safeAddress);
+        setIsDeployingSafe(false);
+      }
     } catch (error) {
       console.log('loginWeb3Auth error: ', error);
     }
@@ -176,7 +201,14 @@ const useAuthKit = (): IuseAuthKit => {
       web3AuthPack?.signOut();
       setOwnerAddress('');
       setSafes([]);
+      setSafeSelected('');
       setWeb3Provider(undefined);
+
+      setIsLoadingWeb3Auth(true);
+
+      setTimeout(() => {
+        setIsLoadingWeb3Auth(false);
+      }, 300);
     } catch (error) {
       console.log('logoutWeb3Auth error:', error);
     }
@@ -191,7 +223,9 @@ const useAuthKit = (): IuseAuthKit => {
     web3AuthPack,
     ownerAddress,
     safes,
+    setSafes,
     safeSelected,
+    isDeployingSafe,
   };
 };
 
