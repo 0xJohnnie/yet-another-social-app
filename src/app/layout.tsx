@@ -1,12 +1,12 @@
 import { Metadata } from 'next';
-import dynamic from 'next/dynamic';
 
 import { ColorSchemeScript, MantineProvider } from '@mantine/core';
 import '@mantine/core/styles.css';
 import { Analytics } from '@vercel/analytics/react';
 import React from 'react';
 
-import { AppConfig } from '@/utils/AppConfig';
+import { AuthKitProvider } from '@/hooks/useAuthKit';
+import AppConfig from '@/utils/AppConfig';
 import { resolver, theme } from '@/utils/theme';
 
 export const metadata: Metadata = {
@@ -65,9 +65,7 @@ export const metadata: Metadata = {
   ],
 };
 
-const MainAppShell = dynamic(() => import('@/components/_main/MainAppShell'));
-
-export default function RootLayout({ children }: { children: any }) {
+const RootLayout = ({ children }: { children: any }) => {
   return (
     <html lang="en">
       <head>
@@ -79,12 +77,12 @@ export default function RootLayout({ children }: { children: any }) {
           cssVariablesResolver={resolver}
           defaultColorScheme="dark"
         >
-          <MainAppShell>
-            {children}
-            <Analytics debug={false} />
-          </MainAppShell>
+          <AuthKitProvider>{children}</AuthKitProvider>
+          <Analytics debug={false} />
         </MantineProvider>
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;

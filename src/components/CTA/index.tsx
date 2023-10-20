@@ -3,7 +3,7 @@ import { IconBrandGithub, IconBrandTwitter } from '@tabler/icons-react';
 
 import { _iconSize } from '@/utils/constants';
 
-export default function CTA() {
+const CTA = () => {
   return (
     <Stack>
       <Group justify="center">
@@ -33,4 +33,6 @@ export default function CTA() {
       </Group>
     </Stack>
   );
-}
+};
+
+export default CTA;

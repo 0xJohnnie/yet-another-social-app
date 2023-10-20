@@ -1,35 +1,37 @@
 # YASA - Yet Another Social App
 
-A cross-chain event management and social dApp that supports Account Abstraction
+A social dApp that supports Account Abstraction
 
 ## Purpose
 
-YASA simplifies event management by offering a unified platform that enables social interation between wallets on different blockchains and event ticketing
+YASA offers a unified platform that enables social interation between wallets on different blockchains
 
 ## Key features planned for the Ethglobal ETHOnline 2023 Hackathon
 
-1. Login using social accounts to a smart contract wallet (Account Abstraction)
-2. Token gated messsaging between cross-chain wallets
-3. Seamlessly transfer tokens across various chains without bridging
+1. Account Abstraction Smart contract wallet by Safe (Previously known as Gnosis Safe)
 
-4. Login into an EOA via wallet extensions
-5. Swap (buy/sell) tokens via Uniswap
-6. On-ramp fiat into crypto within the dApp
+2. Login using social account (Google / Twitter / Discord)
+
+3. Login using an EOA via desktop EVM wallet extension (Metamask / Rabby)
+
+4. Login using Email address
+
+5. Sponsor gas using a Relayer (Gelato)
 
 ### Features Wish list
 
-1. **Dynamic QR Code Generation for Event Check-in**
-   Allow event organizers to seamlessly check in attendees using dynamic QR codes generated within the app.
+1. Token gated messsaging between wallets
 
-2. **POAP Airdrop to Attendees**
-   Automatically distribute Proof of Attendance Protocol (POAP) tokens to event attendees, streamlining rewards and recognition for participation.
+2. Community and user profile pages
 
-3. Event creation and ticket management using smart contracts
+3. Swap (buy/sell) tokens via Uniswap
 
-4. **NFT Collection Creation and Minting**
+4. On-ramp fiat into crypto within the dApp
+
+5. Seamlessly transfer tokens across various chains without bridging
+
+6. **NFT Collection Creation and Minting**
    Enable users to create and mint their own non-fungible token (NFT) collections, simplifying the creation and sharing of unique digital assets.
-
-5. Community and user profile pages
 
 ## Technologies
 
@@ -38,14 +40,11 @@ YASA simplifies event management by offering a unified platform that enables soc
 1. Safe{Core} Account Abstraction SDK
    ↪️https://github.com/safe-global/safe-core-sdk
 
-2. Alchemy (API to query the blockchain)
-   ↪️https://www.alchemy.com/sdk
+2. Gelato (Relayer for gasless transactions)
+   ↪️https://github.com/gelatodigital
 
-3. Wagmi (React hooks for Ethereum)
-   ↪️https://github.com/wagmi-dev/wagmi
-
-4. Viem (Typescript interface for Ethereum)
-   ↪️https://github.com/wagmi-dev/viem
+3. Web3Auth (Non-custodial auth infrastructure for Web3 wallets and dApp)
+   ↪️https://github.com/Web3Auth
 
 ### Essentials
 
@@ -64,12 +63,6 @@ YASA simplifies event management by offering a unified platform that enables soc
 2. Install dependencies: `yarn install`
 3. Copy the .env.example file to `.env` and edit the variables to match your local environment.
 4. Run `yarn dev` to launch the application in your local development environment.
-
-## Miscellaneous
-
-🚧 Please note that the detault API key for Alchemy SDK may be rate-limited based on traffic.
-
-To avoid this, replace it with your own Alchemy SDK key by editing the `REACT_APP_ALCHEMY_API_KEY` environment variable in the `.env` file.
 
 # Feedback
 

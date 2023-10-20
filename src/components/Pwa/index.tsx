@@ -34,7 +34,7 @@ const InstallPWA = () => {
 
   useEffect(() => {
     if (sw && !isDevEnv) {
-      sw.register('/yasa-nextpwa-service-worker.js', { scope: '/' })
+      sw.register('/service-worker.js', { scope: '/' })
         .then((registration) => {
           console.debug(
             'Service Worker registration successful with scope: ',

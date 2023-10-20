@@ -19,18 +19,15 @@
 # PWA
 **/public/precache.*.*.js
 **/public/sw.js
-**/public/yasa-nextpwa-service-worker.js
 **/public/service-worker.js
 **/public/workbox-*.js
 **/public/worker-*.js
 **/public/fallback-*.js
 **/public/precache.*.*.js.map
 **/public/sw.js.map
-**/public/yasa-nextpwa-service-worker.js.map
 **/public/service-worker.js.map
 **/public/workbox-*.js.map
 **/public/worker-*.js.map
-**/public/fallback-*.js
 
 # dependencies
 /node_modules

@@ -9,7 +9,7 @@ export const metadata = {
   title: '404',
 };
 
-export default function NotFound() {
+const NotFound = () => {
   return (
     <Stack ta="center">
       <Title mt={100}>
@@ -34,4 +34,6 @@ export default function NotFound() {
       </Link>
     </Stack>
   );
-}
+};
+
+export default NotFound;

@@ -13,7 +13,7 @@ import { ethers } from 'ethers';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-export const deploySafe = async (ownerAddress: string): Promise<string> => {
+const deploySafe = async (ownerAddress: string): Promise<string> => {
   console.error('\n\nSTART deploySafe\n\n');
   try {
     const privateProvider = new ethers.providers.JsonRpcProvider(
@@ -85,3 +85,5 @@ export const deploySafe = async (ownerAddress: string): Promise<string> => {
     return '';
   }
 };
+
+export default deploySafe;

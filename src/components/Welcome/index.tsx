@@ -4,7 +4,7 @@ import { _appShellPadding } from '@/utils/constants';
 
 import classes from './Welcome.module.css';
 
-export function Welcome() {
+const Welcome = () => {
   return (
     <>
       <Stack justify="space-between">
@@ -23,4 +23,6 @@ export function Welcome() {
       </Stack>
     </>
   );
-}
+};
+
+export default Welcome;

@@ -5,10 +5,9 @@ import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-export const AppConfig = {
+const AppConfig = {
   site_name: 'YASA',
-  title:
-    'YASA - A cross-chain event management and social dApp that supports Account Abstraction',
+  title: 'YASA - A cross-chain social dApp that supports Account Abstraction',
   title_template: '%s - by 0xJohnnie',
   site:
     process.env.NODE_ENV === 'production'
@@ -16,7 +15,7 @@ export const AppConfig = {
       : 'http://localhost:3000',
 
   description:
-    'YASA - A cross-chain event management and social dApp that supports Account Abstraction',
+    'YASA - A cross-chain social dApp that supports Account Abstraction',
   author: { name: '0xJohnnie', site: 'https://linktr.ee/0xJohnnie' },
   locale: 'en',
   version: `${dayjs
@@ -26,3 +25,5 @@ export const AppConfig = {
     process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA.slice(0, 6) ?? ''
   }`.trim(),
 };
+
+export default AppConfig;

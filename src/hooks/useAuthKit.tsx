@@ -13,53 +13,99 @@ import {
 import { Web3AuthOptions } from '@web3auth/modal';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
 import { ethers } from 'ethers';
-import { useEffect, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import { isMobile } from 'react-device-detect';
 
-import { AppConfig } from '@/utils/AppConfig';
+import AppConfig from '@/utils/AppConfig';
 
-import { deploySafe } from './deploySafe';
+import deploySafe from './deploySafe';
 
-interface IuseAuthKit {
+interface AuthKitContextProps {
+  isLoadingWeb3Auth: boolean;
+  web3Provider?: ethers.providers.Web3Provider;
+  ownerAddress: string;
+
+  setSafeAddress: React.Dispatch<React.SetStateAction<string>>;
+  safes: string[];
+  safeAddress: string;
+  isDeployingSafe: boolean;
+
+  isAuthenticated: boolean;
   loginWeb3Auth: () => void;
   logoutWeb3Auth: () => void;
-  setSafes: (safeAdd: string[]) => void;
-  isLoadingWeb3Auth: boolean;
-  isAuthenticated: boolean;
-  web3Provider?: ethers.providers.Web3Provider;
-  web3AuthPack: Web3AuthModalPack | undefined;
-  ownerAddress: string;
-  safes: string[];
-  safeSelected: string;
-  isDeployingSafe: boolean;
+
+  isRelayerLoading: boolean;
+  relayTransaction: () => Promise<void>;
+  gelatoTaskId?: string;
 }
 
-const connectedHandler: Web3AuthEventListener = (data) =>
-  console.log('CONNECTED', data);
-const disconnectedHandler: Web3AuthEventListener = (data) =>
-  console.log('DISCONNECTED', data);
+const initialState = {
+  isLoadingWeb3Auth: false,
+  ownerAddress: '',
 
-const useAuthKit = (): IuseAuthKit => {
+  setSafeAddress: () => {},
+  safes: [],
+  safeAddress: '',
+  isDeployingSafe: false,
+
+  isAuthenticated: false,
+  loginWeb3Auth: () => {},
+  logoutWeb3Auth: () => {},
+
+  isRelayerLoading: true,
+  relayTransaction: async () => {},
+};
+
+const authKitContext = createContext<AuthKitContextProps>(initialState);
+
+const useAuthKit = () => {
+  const context = useContext(authKitContext);
+
+  if (!context) {
+    throw new Error('authKitContext should be used within a AuthKit Provider');
+  }
+  return context;
+};
+
+const AuthKitProvider = ({ children }: { children: any }) => {
+  const [web3Provider, setWeb3Provider] =
+    useState<ethers.providers.Web3Provider>();
+  const [web3AuthKit, setWeb3AuthKit] = useState<Web3AuthModalPack>();
+
+  const [ownerAddress, setOwnerAddress] = useState<string>('');
+
+  const [safes, setSafes] = useState<string[]>([]);
+  const [safeAddress, setSafeAddress] = useState<string>('');
+
+  const isAuthenticated = !!ownerAddress;
+
   const [isLoadingWeb3Auth, setIsLoadingWeb3Auth] = useState<boolean>(true);
 
   const [isDeployingSafe, setIsDeployingSafe] = useState<boolean>(false);
 
-  const [web3AuthPack, setWeb3AuthPack] = useState<Web3AuthModalPack>();
-  const [web3Provider, setWeb3Provider] =
-    useState<ethers.providers.Web3Provider>();
+  const [isRelayerLoading, setIsRelayerLoading] = useState<boolean>(false);
+  const [gelatoTaskId, setGelatoTaskId] = useState<string>();
 
-  const [safes, setSafes] = useState<string[]>([]);
-  const [safeSelected, setSafeSelected] = useState<string>('');
+  const connectedHandler: Web3AuthEventListener = (data) =>
+    console.log('CONNECTED', data);
 
-  const [ownerAddress, setOwnerAddress] = useState<string>('');
-  const isAuthenticated = !!ownerAddress;
+  const disconnectedHandler: Web3AuthEventListener = (data) =>
+    console.log('DISCONNECTED', data);
 
   useEffect(() => {
-    const init = async () => {
+    (async () => {
+      setIsLoadingWeb3Auth(true);
+
       const providerExist = (await detectEthereumProvider()) as boolean;
       const showAdapter = providerExist && !isMobile;
 
-      const web3auth = new Web3AuthModalPack({
+      const web3authPack = new Web3AuthModalPack({
         txServiceUrl: process.env.NEXT_PUBLIC_TX_SERVICE_URL_POLYGON,
       });
 
@@ -128,55 +174,38 @@ const useAuthKit = (): IuseAuthKit => {
         },
       });
 
-      await web3auth.init({
+      await web3authPack.init({
         options,
         adapters: [openloginAdapter],
         modalConfig,
       });
 
-      web3auth.subscribe(ADAPTER_EVENTS.CONNECTED, connectedHandler);
-      web3auth.subscribe(ADAPTER_EVENTS.DISCONNECTED, disconnectedHandler);
+      setWeb3AuthKit(web3authPack);
 
-      if (web3auth.getProvider()) {
-        const { safes, eoa } = await web3auth.signIn();
-        const provider =
-          web3auth.getProvider() as ethers.providers.ExternalProvider;
+      web3authPack.subscribe(ADAPTER_EVENTS.CONNECTED, connectedHandler);
+      web3authPack.subscribe(ADAPTER_EVENTS.DISCONNECTED, disconnectedHandler);
 
-        console.log('useAuthKit  eoa', eoa);
-        console.dir('useAuthKit safes', safes);
-
-        if (safes && safes.length > 0) {
-          setSafes(safes || []);
-          setSafeSelected(safes[0]);
-        }
-
-        setOwnerAddress(eoa);
-        setWeb3Provider(new ethers.providers.Web3Provider(provider));
-      }
-      setWeb3AuthPack(web3auth);
       setIsLoadingWeb3Auth(false);
-    };
-
-    init();
+    })();
   }, []);
 
-  const loginWeb3Auth = async () => {
-    if (!web3AuthPack) {
+  const loginWeb3Auth = useCallback(async () => {
+    if (!web3AuthKit) {
       return;
     }
 
     console.error(' loginWeb3Auth : START');
     try {
-      const { safes, eoa } = await web3AuthPack.signIn();
+      const { safes, eoa } = await web3AuthKit.signIn();
       const provider =
-        web3AuthPack.getProvider() as ethers.providers.ExternalProvider;
+        web3AuthKit.getProvider() as ethers.providers.ExternalProvider;
 
-      console.log('useAuthKit  eoa', eoa);
-      console.dir('useAuthKit safes', safes);
+      console.warn('useAuthKit  eoa', eoa);
+      console.warn('useAuthKit safes', safes);
 
       setOwnerAddress(eoa);
       setSafes(safes || []);
-      setSafeSelected(safes && safes?.length > 0 ? safes[0] : '');
+      setSafeAddress(safes && safes?.length > 0 ? safes[0] : '');
       setWeb3Provider(new ethers.providers.Web3Provider(provider));
 
       if (safes && safes.length === 0) {
@@ -189,28 +218,39 @@ const useAuthKit = (): IuseAuthKit => {
         console.warn('useAuthKit setIsDeployingSafe : END');
 
         safeAddress.length > 1 && setSafes([...safes, safeAddress]);
-        setSafeSelected(safeAddress);
+        setSafeAddress(safeAddress);
         setIsDeployingSafe(false);
 
-        console.error(' loginWeb3Auth : END');
+        console.warn('setIsDeployingSafe DONE eoa', eoa);
+        console.warn('setIsDeployingSafe DONE safes', safes);
       }
     } catch (error) {
       console.log('loginWeb3Auth error: ', error);
     }
-  };
+
+    console.error(' loginWeb3Auth : END');
+  }, [web3AuthKit]);
+
+  useEffect(() => {
+    if (web3AuthKit && web3AuthKit.getProvider()) {
+      (async () => {
+        await loginWeb3Auth();
+      })();
+    }
+  }, [web3AuthKit, loginWeb3Auth]);
 
   const logoutWeb3Auth = () => {
-    if (!web3AuthPack) {
+    if (!web3AuthKit) {
       return;
     }
 
     try {
-      web3AuthPack?.signOut();
+      web3AuthKit.signOut();
+
+      setWeb3Provider(undefined);
       setOwnerAddress('');
       setSafes([]);
-      setSafeSelected('');
-      setWeb3Provider(undefined);
-
+      setSafeAddress('');
       setIsLoadingWeb3Auth(true);
 
       setTimeout(() => {
@@ -221,19 +261,31 @@ const useAuthKit = (): IuseAuthKit => {
     }
   };
 
-  return {
+  const relayTransaction = async () => {};
+
+  const state = {
+    isLoadingWeb3Auth,
+    web3Provider,
+
+    isAuthenticated,
     loginWeb3Auth,
     logoutWeb3Auth,
-    isLoadingWeb3Auth,
-    isAuthenticated,
-    web3Provider,
-    web3AuthPack,
+
     ownerAddress,
+    safeAddress,
+
+    setSafeAddress,
     safes,
-    setSafes,
-    safeSelected,
     isDeployingSafe,
+
+    isRelayerLoading,
+    relayTransaction,
+    gelatoTaskId,
   };
+
+  return (
+    <authKitContext.Provider value={state}>{children}</authKitContext.Provider>
+  );
 };
 
-export default useAuthKit;
+export { useAuthKit, AuthKitProvider };

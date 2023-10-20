@@ -12,7 +12,6 @@ const withPWA = require('@ducanh2912/next-pwa').default({
   disable: isDevEnv,
   // register: true,
   // scope: '/app',
-  sw: 'yasa-nextpwa-service-worker.js',
 });
 
 const nextConfig = withBundleAnalyzer(

@@ -1,8 +1,8 @@
 import { MetadataRoute } from 'next';
 
-import { AppConfig } from '@/utils/AppConfig';
+import AppConfig from '@/utils/AppConfig';
 
-export default function robots(): MetadataRoute.Robots {
+const robots = (): MetadataRoute.Robots => {
   return {
     rules: {
       userAgent: '*',
@@ -11,4 +11,6 @@ export default function robots(): MetadataRoute.Robots {
     },
     host: `${AppConfig.site}`,
   };
-}
+};
+
+export default robots;
