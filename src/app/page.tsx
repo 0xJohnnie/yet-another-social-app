@@ -290,7 +290,7 @@ const HomePage = () => {
           {/* START : NAVBAR FOOTER */}
           <AppShell.Section>
             <Stack>
-              {screenWidth >= 575 && !isOpened && <InstallPWA />}
+              {screenWidth >= 575 && <InstallPWA />}
 
               {isAuthenticated && (
                 <>
