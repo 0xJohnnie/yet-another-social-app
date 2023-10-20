@@ -165,6 +165,7 @@ const useAuthKit = (): IuseAuthKit => {
       return;
     }
 
+    console.error(' loginWeb3Auth : START');
     try {
       const { safes, eoa } = await web3AuthPack.signIn();
       const provider =
@@ -181,11 +182,17 @@ const useAuthKit = (): IuseAuthKit => {
       if (safes && safes.length === 0) {
         setIsDeployingSafe(true);
 
+        console.warn('useAuthKit setIsDeployingSafe : START');
+
         const safeAddress = await deploySafe(eoa);
+
+        console.warn('useAuthKit setIsDeployingSafe : END');
 
         safeAddress.length > 1 && setSafes([...safes, safeAddress]);
         setSafeSelected(safeAddress);
         setIsDeployingSafe(false);
+
+        console.error(' loginWeb3Auth : END');
       }
     } catch (error) {
       console.log('loginWeb3Auth error: ', error);

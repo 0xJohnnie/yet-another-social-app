@@ -66,14 +66,14 @@ export const deploySafe = async (ownerAddress: string): Promise<string> => {
     const safeAdd = await safeSdk.getAddress();
 
     console.warn('deployer address ', await deployerSigner.getAddress());
-    console.log('owner address', ownerAddress);
-    console.log('safe address', safeAdd);
+    console.warn('owner address', ownerAddress);
+    console.warn('safe address', safeAdd);
 
-    console.log(
+    console.error(
       `Owner Address https://polygonscan.com/address/${ownerAddress}`,
     );
-    console.log(`Safe Address https://polygonscan.com/address/${safeAdd}`);
-    console.log(
+    console.error(`Safe Address https://polygonscan.com/address/${safeAdd}`);
+    console.error(
       `Safe UI https://app.safe.global/settings/setup?safe=matic:${safeAdd}`,
     );
 
