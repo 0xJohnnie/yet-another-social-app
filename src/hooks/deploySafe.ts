@@ -5,7 +5,6 @@ import Safe, {
   SafeAccountConfig,
   SafeFactory,
 } from '@safe-global/protocol-kit';
-import { MetaTransactionData } from '@safe-global/safe-core-sdk-types';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
