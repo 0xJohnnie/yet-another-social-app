@@ -18,6 +18,8 @@ YASA offers a unified platform that enables social interation between wallets on
 
 5. Sponsor gas using a Relayer (Gelato)
 
+6. Messsaging between EOA and Safe AA wallets (Push Protocol)
+
 ### Features Wish list
 
 1. Token gated messsaging between wallets
@@ -45,6 +47,9 @@ YASA offers a unified platform that enables social interation between wallets on
 
 3. Web3Auth (Non-custodial auth infrastructure for Web3 wallets and dApp)
    ↪️https://github.com/Web3Auth
+
+4. Push Protocol (Cross-chain communication protocol)
+   ↪️https://github.com/ethereum-push-notification-service/push-sdk
 
 ### Essentials
 

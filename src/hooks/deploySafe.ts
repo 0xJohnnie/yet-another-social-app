@@ -5,6 +5,7 @@ import Safe, {
   SafeAccountConfig,
   SafeFactory,
 } from '@safe-global/protocol-kit';
+import { MetaTransactionData } from '@safe-global/safe-core-sdk-types';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
@@ -15,20 +16,23 @@ dayjs.extend(timezone);
 
 const deploySafe = async (ownerAddress: string): Promise<string> => {
   console.error('\n\nSTART deploySafe\n\n');
+
   try {
-    const privateProvider = new ethers.providers.JsonRpcProvider(
+    const provider = new ethers.providers.JsonRpcProvider(
       process.env.NEXT_PUBLIC_RPC_URL_POLYGON,
     );
 
     const deployerSigner = new ethers.Wallet(
       process.env.DEPLOYER_KEY,
-      privateProvider,
+      provider,
     );
 
     const deployerAdapter = new EthersAdapter({
       ethers,
       signerOrProvider: deployerSigner,
     });
+
+    const privateSigner = new ethers.Wallet(process.env.DEPLOYER_KEY, provider);
 
     const safeAccConfig: SafeAccountConfig = {
       owners: [ownerAddress],
@@ -64,6 +68,17 @@ const deploySafe = async (ownerAddress: string): Promise<string> => {
     );
 
     const safeAdd = await safeSdk.getAddress();
+
+    const faucetAmount = ethers.utils.parseUnits('0.001', 'ether').toString();
+
+    const tx = await privateSigner.sendTransaction({
+      to: safeAdd,
+      data: '0x',
+      value: faucetAmount,
+    });
+
+    console.log('Sent! 🎉');
+    console.log(`TX hash: ${tx.hash}`);
 
     console.warn('deployer address ', await deployerSigner.getAddress());
     console.warn('owner address', ownerAddress);

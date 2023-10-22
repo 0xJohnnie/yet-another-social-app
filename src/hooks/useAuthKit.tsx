@@ -5,6 +5,7 @@ import {
   Web3AuthEventListener,
   Web3AuthModalPack,
 } from '@safe-global/auth-kit';
+import { MetaTransactionData } from '@safe-global/safe-core-sdk-types';
 import {
   ADAPTER_EVENTS,
   CHAIN_NAMESPACES,
@@ -12,6 +13,7 @@ import {
 } from '@web3auth/base';
 import { Web3AuthOptions } from '@web3auth/modal';
 import { OpenloginAdapter } from '@web3auth/openlogin-adapter';
+import { Utils } from 'alchemy-sdk';
 import { ethers } from 'ethers';
 import {
   createContext,
@@ -25,6 +27,7 @@ import { isMobile } from 'react-device-detect';
 import AppConfig from '@/utils/AppConfig';
 
 import deploySafe from './deploySafe';
+import gelatoRelay from './gelatoRelay';
 
 interface AuthKitContextProps {
   isLoadingWeb3Auth: boolean;
@@ -36,13 +39,18 @@ interface AuthKitContextProps {
   safeAddress: string;
   isDeployingSafe: boolean;
 
+  setSafeBalance: React.Dispatch<React.SetStateAction<number>>;
+  safeBalance: number;
+
   isAuthenticated: boolean;
   loginWeb3Auth: () => void;
   logoutWeb3Auth: () => void;
 
   isRelayerLoading: boolean;
-  relayTransaction: () => Promise<void>;
-  gelatoTaskId?: string;
+  relayTransaction: (destinationAddress: string) => Promise<void>;
+  setIsRelayerLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  gelatoTaskId: string;
+  setGelatoTaskId: (gelatoTaskId: string) => void;
 }
 
 const initialState = {
@@ -50,9 +58,12 @@ const initialState = {
   ownerAddress: '',
 
   setSafeAddress: () => {},
-  safes: [],
   safeAddress: '',
+  safes: [],
   isDeployingSafe: false,
+
+  setSafeBalance: () => {},
+  safeBalance: 0,
 
   isAuthenticated: false,
   loginWeb3Auth: () => {},
@@ -60,6 +71,9 @@ const initialState = {
 
   isRelayerLoading: true,
   relayTransaction: async () => {},
+  setIsRelayerLoading: () => {},
+  gelatoTaskId: '',
+  setGelatoTaskId: () => {},
 };
 
 const authKitContext = createContext<AuthKitContextProps>(initialState);
@@ -83,6 +97,8 @@ const AuthKitProvider = ({ children }: { children: any }) => {
   const [safes, setSafes] = useState<string[]>([]);
   const [safeAddress, setSafeAddress] = useState<string>('');
 
+  const [safeBalance, setSafeBalance] = useState<number>(0);
+
   const isAuthenticated = !!ownerAddress;
 
   const [isLoadingWeb3Auth, setIsLoadingWeb3Auth] = useState<boolean>(true);
@@ -90,7 +106,7 @@ const AuthKitProvider = ({ children }: { children: any }) => {
   const [isDeployingSafe, setIsDeployingSafe] = useState<boolean>(false);
 
   const [isRelayerLoading, setIsRelayerLoading] = useState<boolean>(false);
-  const [gelatoTaskId, setGelatoTaskId] = useState<string>();
+  const [gelatoTaskId, setGelatoTaskId] = useState<string>('');
 
   const connectedHandler: Web3AuthEventListener = (data) =>
     console.log('CONNECTED', data);
@@ -116,6 +132,7 @@ const AuthKitProvider = ({ children }: { children: any }) => {
           chainNamespace: CHAIN_NAMESPACES.EIP155,
           chainId: process.env.NEXT_PUBLIC_CHAIN_ID,
           rpcTarget: process.env.NEXT_PUBLIC_RPC_URL_POLYGON,
+          blockExplorer: process.env.NEXT_PUBLIC_BLOCK_EXPLORER,
         },
         uiConfig: {
           appName: AppConfig.site_name,
@@ -197,8 +214,11 @@ const AuthKitProvider = ({ children }: { children: any }) => {
     console.error(' loginWeb3Auth : START');
     try {
       const { safes, eoa } = await web3AuthKit.signIn();
+
       const provider =
         web3AuthKit.getProvider() as ethers.providers.ExternalProvider;
+
+      const authProvider = new ethers.providers.Web3Provider(provider);
 
       console.warn('useAuthKit  eoa', eoa);
       console.warn('useAuthKit safes', safes);
@@ -206,30 +226,64 @@ const AuthKitProvider = ({ children }: { children: any }) => {
       setOwnerAddress(eoa);
       setSafes(safes || []);
       setSafeAddress(safes && safes?.length > 0 ? safes[0] : '');
-      setWeb3Provider(new ethers.providers.Web3Provider(provider));
+      setWeb3Provider(authProvider);
 
       if (safes && safes.length === 0) {
         setIsDeployingSafe(true);
 
         console.warn('useAuthKit setIsDeployingSafe : START');
 
-        const safeAddress = await deploySafe(eoa);
+        console.warn(
+          'setIsDeployingSafe : Web3Provider',
+          new ethers.providers.Web3Provider(provider),
+        );
+
+        console.warn('setIsDeployingSafe : eoa', eoa);
+
+        const safeAdd = await deploySafe(eoa);
+
+        const txData: MetaTransactionData[] = [
+          {
+            to: ownerAddress,
+            data: '0x',
+            value: '0x0',
+            //  operation: OperationType.Call,
+          },
+        ];
+
+        /*     const web3Provider = new ethers.providers.Web3Provider(provider)
+    const { gelatoTaskId :gId } = await gelatoRelay(
+      txData,
+      safeAddress,
+      web3Provider,
+    );
+
+    setGelatoTaskId(gId);
+
+
+    */
 
         console.warn('useAuthKit setIsDeployingSafe : END');
 
-        safeAddress.length > 1 && setSafes([...safes, safeAddress]);
-        setSafeAddress(safeAddress);
+        safeAdd.length > 1 && setSafes([...safes, safeAdd]);
+        setSafeAddress(safeAdd);
         setIsDeployingSafe(false);
 
         console.warn('setIsDeployingSafe DONE eoa', eoa);
         console.warn('setIsDeployingSafe DONE safes', safes);
+      } else if (safes && safes[0]) {
+        const balance = await authProvider.getBalance(safes[0]);
+
+        setSafeBalance(Number(Utils.formatEther(balance)));
+
+        console.warn('xx BAL', Number(Utils.formatEther(balance)));
       }
     } catch (error) {
       console.log('loginWeb3Auth error: ', error);
     }
 
     console.error(' loginWeb3Auth : END');
-  }, [web3AuthKit]);
+  }, [ownerAddress, web3AuthKit]);
 
   useEffect(() => {
     if (web3AuthKit && web3AuthKit.getProvider()) {
@@ -261,7 +315,46 @@ const AuthKitProvider = ({ children }: { children: any }) => {
     }
   };
 
-  const relayTransaction = async () => {};
+  const relayTransaction = async (destinationAddress: string) => {
+    console.error('\n\nSTART relayTransaction\n\n');
+
+    try {
+      /*    const destinationAddress = '0xB1443CE2Ef24c39db1979b112BaE1A701E171Adb';
+       */
+      const withdrawAmount = ethers.utils
+        .parseUnits('0.0001', 'ether')
+        .toString();
+
+      const txData: MetaTransactionData[] = [
+        {
+          to: destinationAddress,
+          data: '0x',
+          value: withdrawAmount,
+          //  operation: OperationType.Call,
+        },
+      ];
+
+      console.warn('txData', txData);
+
+      if (!web3Provider || !txData || !safeAddress) {
+        return;
+      }
+
+      setIsRelayerLoading(true);
+
+      const { gelatoTaskId } = await gelatoRelay(
+        txData,
+        safeAddress,
+        web3Provider,
+      );
+
+      setGelatoTaskId(gelatoTaskId);
+    } catch (error) {
+      console.log('relayTransaction error:', error);
+    }
+
+    console.error('\n\nEND relayTransaction\n\n');
+  };
 
   const state = {
     isLoadingWeb3Auth,
@@ -278,9 +371,14 @@ const AuthKitProvider = ({ children }: { children: any }) => {
     safes,
     isDeployingSafe,
 
+    setSafeBalance,
+    safeBalance,
+
     isRelayerLoading,
     relayTransaction,
+    setIsRelayerLoading,
     gelatoTaskId,
+    setGelatoTaskId,
   };
 
   return (

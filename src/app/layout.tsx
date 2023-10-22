@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 
 import { ColorSchemeScript, MantineProvider } from '@mantine/core';
 import '@mantine/core/styles.css';
@@ -65,6 +66,8 @@ export const metadata: Metadata = {
   ],
 };
 
+const MainAppShell = dynamic(() => import('@/components/_MainAppShell'));
+
 const RootLayout = ({ children }: { children: any }) => {
   return (
     <html lang="en">
@@ -77,7 +80,9 @@ const RootLayout = ({ children }: { children: any }) => {
           cssVariablesResolver={resolver}
           defaultColorScheme="dark"
         >
-          <AuthKitProvider>{children}</AuthKitProvider>
+          <AuthKitProvider>
+            <MainAppShell>{children}</MainAppShell>
+          </AuthKitProvider>
           <Analytics debug={false} />
         </MantineProvider>
       </body>
