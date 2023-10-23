@@ -4,7 +4,6 @@ import {
   Box,
   Divider,
   Flex,
-  Group,
   LoadingOverlay,
   Stack,
   Text,
@@ -25,15 +24,15 @@ import {
 } from '@pushprotocol/uiweb';
 import { useEffect, useState } from 'react';
 
+import Welcome from '@/components/Welcome';
 import { useAuthKit } from '@/hooks/useAuthKit';
-import { useSDKSocket } from '@/hooks/useSDKSocket';
 import { walletToPCAIP10 } from '@/utils/pushHelper';
 import shortenWalletAddress from '@/utils/shortenWalletAddress';
 
-import { AccountContext, SocketContext } from '../context';
+import { AccountContext } from '../context';
 
 function Chat() {
-  const { web3Provider, ownerAddress, safeAddress } = useAuthKit();
+  const { web3Provider, ownerAddress } = useAuthKit();
 
   const [isCAIP, setIsCAIP] = useState(false);
   const [signer, setSigner] = useState<any>();
@@ -84,12 +83,7 @@ function Chat() {
       fetchChatList(chatOwner);
       console.warn('chatOwner', chatOwner);
       console.warn('info', chatOwnerInfo);
-
-      console.warn('xownerAdd', ownerAdd);
-
       console.warn('chat', chatOwner.chat);
-      console.warn('profile', chatOwner.profile);
-      console.warn('encryption', chatOwner.encryption);
 
       // Create Socket to Listen to incoming messages
       const pushSDKSocket = createSocketConnection({
@@ -216,6 +210,14 @@ function Chat() {
     }
   };
 
+  const {
+    loginWeb3Auth,
+    isAuthenticated,
+    isLoadingWeb3Auth,
+    isRelayerLoading,
+    gelatoTaskId,
+  } = useAuthKit();
+
   return screenHeight === 0 && screenWidth === 0 ? (
     <LoadingOverlay
       visible={true}
@@ -223,14 +225,8 @@ function Chat() {
       overlayProps={{ blur: 2, backgroundOpacity: 0.08, color: '#5541d9' }}
       loaderProps={{ color: 'violet', type: 'dots', size: 128 }}
     />
-  ) : (
+  ) : owner ? (
     <>
-      <LoadingOverlay
-        visible={!owner}
-        zIndex={1000}
-        overlayProps={{ blur: 2, backgroundOpacity: 0.08, color: '#5541d9' }}
-        loaderProps={{ color: 'violet', type: 'dots', size: 128 }}
-      />
       <Stack h={screenHeight - 200}>
         <Text>All Conversations</Text>
         <Flex
@@ -280,17 +276,31 @@ function Chat() {
             </Button>
           </form>
         </Box>
-        <AccountContext.Provider value={{ pgpPrivateKey, setSpaceId }}>
-          <ChatUIProvider
-            theme={darkChatTheme}
-            account={ownerAddress}
-            signer={signer}
-            pgpPrivateKey={pgpPrivateKey}
-            env={ENV.PROD}
+        <ChatUIProvider
+          theme={darkChatTheme}
+          account={ownerAddress}
+          signer={signer}
+          pgpPrivateKey={pgpPrivateKey}
+          env={ENV.PROD}
+        >
+          {chatListHistory}
+        </ChatUIProvider>
+      </Stack>
+    </>
+  ) : (
+    <>
+      <Stack justify="space-between">
+        <Welcome />
+
+        {!isAuthenticated && !isLoadingWeb3Auth && (
+          <Button
+            style={{ zIndex: screenWidth <= 576 }}
+            variant="contained"
+            onClick={loginWeb3Auth}
           >
-            {chatListHistory}
-          </ChatUIProvider>
-        </AccountContext.Provider>
+            Login to view chat
+          </Button>
+        )}
       </Stack>
     </>
   );

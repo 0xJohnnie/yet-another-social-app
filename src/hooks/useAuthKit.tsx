@@ -284,7 +284,7 @@ const AuthKitProvider = ({ children }: { children: any }) => {
     }
 
     console.error(' loginWeb3Auth : END');
-  }, [ownerAddress, web3AuthKit]);
+  }, [web3AuthKit]);
 
   useEffect(() => {
     if (web3AuthKit && web3AuthKit.getProvider()) {

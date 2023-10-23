@@ -50,12 +50,11 @@ const deploySafe = async (ownerAddress: string): Promise<string> => {
 
     const safeSdk: Safe = await sf.deploySafe({
       safeAccountConfig: safeAccConfig,
-      /*      
- options: {
+
+      options: {
         maxFeePerGas: process.env.NEXT_PUBLIC_MAX_GAS_FEE,
         maxPriorityFeePerGas: process.env.NEXT_PUBLIC_MAX_GAS_FEE,
-      }, 
-      */
+      },
     });
 
     console.log(

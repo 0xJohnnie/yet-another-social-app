@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { usePathname } from 'next/navigation';
 
 import {
   Button,
@@ -33,7 +32,6 @@ const Welcome = dynamic(() => import('@/components/Welcome'));
 const HomePage = () => {
   const {
     web3Provider,
-    ownerAddress,
     isAuthenticated,
     isLoadingWeb3Auth,
     safeAddress,

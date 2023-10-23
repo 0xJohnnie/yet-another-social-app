@@ -28,7 +28,7 @@
     "@mantine/form": "^7.1.5",
     "@mantine/hooks": "^7.1.5",
     "@metamask/detect-provider": "^2.0.0",
-    "@pushprotocol/restapi": "^1.4.28",
+    "@pushprotocol/restapi": "^1.4.29",
     "@pushprotocol/socket": "^0.5.2",
     "@pushprotocol/uiweb": "^1.1.15",
     "@safe-global/auth-kit": "^1.2.1",

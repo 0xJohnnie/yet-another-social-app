@@ -65,15 +65,10 @@ const MainAppShell = ({ children }: { children: any }) => {
   const {
     loginWeb3Auth,
     logoutWeb3Auth,
-    web3Provider,
-    ownerAddress,
     isAuthenticated,
     isLoadingWeb3Auth,
     safeAddress,
     isDeployingSafe,
-    relayTransaction,
-    isRelayerLoading,
-    gelatoTaskId,
   } = useAuthKit();
 
   const [isOpened, { toggle }] = useDisclosure();
@@ -356,7 +351,7 @@ const MainAppShell = ({ children }: { children: any }) => {
                 variant="contained"
                 onClick={loginWeb3Auth}
               >
-                Login
+                Login into YASA
               </Button>
             )}
           </Stack>
