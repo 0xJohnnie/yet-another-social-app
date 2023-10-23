@@ -29,8 +29,6 @@ import { useAuthKit } from '@/hooks/useAuthKit';
 import { walletToPCAIP10 } from '@/utils/pushHelper';
 import shortenWalletAddress from '@/utils/shortenWalletAddress';
 
-import { AccountContext } from '../context';
-
 function Chat() {
   const { web3Provider, ownerAddress } = useAuthKit();
 
