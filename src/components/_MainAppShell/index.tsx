@@ -345,7 +345,7 @@ const MainAppShell = ({ children }: { children: any }) => {
         {/* +              END OF NAVBAR              + */}
 
         <AppShell.Main>
-          <Stack m={8} h={screenHeight - 300}>
+          <Stack m={8} h={screenHeight - 200}>
             {children}
           </Stack>
 

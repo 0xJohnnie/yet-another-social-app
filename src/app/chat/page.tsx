@@ -2,63 +2,35 @@
 
 import {
   Box,
-  Button,
   Divider,
   Flex,
+  Group,
+  LoadingOverlay,
   Stack,
   Text,
   TextInput,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useViewportSize } from '@mantine/hooks';
 import * as PushProtocolAPI from '@pushprotocol/restapi';
 import { IFeeds, IUser, PushAPI } from '@pushprotocol/restapi';
 import { STREAM } from '@pushprotocol/restapi/src/lib/pushstream/pushStreamTypes';
 import { createSocketConnection, EVENTS } from '@pushprotocol/socket';
 import {
+  Button,
   ChatUIProvider,
   ChatViewComponent,
   darkChatTheme,
   ENV,
 } from '@pushprotocol/uiweb';
 import { useEffect, useState } from 'react';
-import styled from 'styled-components';
 
 import { useAuthKit } from '@/hooks/useAuthKit';
 import { useSDKSocket } from '@/hooks/useSDKSocket';
-import { pCAIP10ToWallet } from '@/utils/pushHelper';
+import { walletToPCAIP10 } from '@/utils/pushHelper';
 import shortenWalletAddress from '@/utils/shortenWalletAddress';
 
 import { AccountContext, SocketContext } from '../context';
-
-export const Section = styled.section`
-  border: 2px solid #ccc;
-  padding: 25px;
-  margin: 10px 0;
-  display: flex;
-  flex-direction: column;
-  background-color: ${'#000'};
-
-  & .headerText {
-    color: '#fff';
-    font-size: 2rem;
-  }
-
-  & .subHeaderText {
-    color: '#fff';
-    font-size: 1.2rem;
-  }
-`;
-
-const ChatViewListCard = styled.div`
-  height: 40vh;
-  background: black;
-  overflow: auto;
-  overflow-x: hidden;
-`;
-
-const ChatViewComponentCard = styled(Section)`
-  height: 60vh;
-`;
 
 function Chat() {
   const { web3Provider, ownerAddress, safeAddress } = useAuthKit();
@@ -77,12 +49,7 @@ function Chat() {
 
   const [isSendingMessage, setisSendingMessage] = useState(false);
 
-  const socketData = useSDKSocket({
-    account: ownerAddress,
-    chainId: 137, // polygon chainId
-    env: ENV.PROD,
-    isCAIP,
-  });
+  const { width: screenWidth, height: screenHeight } = useViewportSize();
 
   useEffect(() => {
     (async () => {
@@ -108,8 +75,6 @@ function Chat() {
         });
 
         setPgpPrivateKey(pgpPrvKey);
-
-        console.warn('pgpPrvKey', pgpPrvKey);
       }
 
       setSigner(ownerSigner);
@@ -128,9 +93,9 @@ function Chat() {
 
       // Create Socket to Listen to incoming messages
       const pushSDKSocket = createSocketConnection({
-        user: ownerAddress,
+        user: walletToPCAIP10(ownerAddress),
         socketType: 'chat',
-        socketOptions: { autoConnect: true, reconnectionAttempts: 3 },
+        socketOptions: { autoConnect: true, reconnectionAttempts: 5 },
         env: ENV.PROD,
       });
 
@@ -146,15 +111,11 @@ function Chat() {
 
           // auto accept all request
           if (message.origin === 'other') {
-            const walletAdd = pCAIP10ToWallet(message.from);
-            await chatOwner.chat.accept(walletAdd);
+            await chatOwner.chat.accept(message.from);
 
-            console.warn(
-              'accepted request from : ',
-              pCAIP10ToWallet(message.from),
-            );
+            console.warn('accepted request from : ', message.from);
 
-            setSelectedChat(walletAdd);
+            setSelectedChat(message.from);
           }
         });
       }
@@ -173,25 +134,22 @@ function Chat() {
   const chatListAllChat =
     chatList &&
     chatList?.map((item, index: number) =>
-      pCAIP10ToWallet(item.did) && pCAIP10ToWallet(item.did).length > 0 ? (
+      item.did && item.did.length > 0 ? (
         <Button
           style={{
-            border:
-              selectedChat === pCAIP10ToWallet(item.did)
-                ? '5px solid green'
-                : '',
+            border: selectedChat === item.did ? '5px solid green' : '',
           }}
-          key={shortenWalletAddress(pCAIP10ToWallet(item.did))}
+          key={shortenWalletAddress(item.did)}
           variant="contained"
           m={8}
           size="md"
           onClick={() => {
-            console.log('set chat to ', pCAIP10ToWallet(item.did));
+            console.log('set chat to ', item.did);
 
-            setSelectedChat(item.did && pCAIP10ToWallet(item.did));
+            setSelectedChat(item.did && item.did);
           }}
         >
-          {shortenWalletAddress(pCAIP10ToWallet(item.did))}
+          {shortenWalletAddress(item.did)}
         </Button>
       ) : null,
     );
@@ -202,35 +160,23 @@ function Chat() {
 
     setChatList(cList);
 
-    cList.forEach((item, index) => {
-      console.error(' INDEX ', index);
-
-      console.log('xxx about', item.about);
-
-      console.warn('xxx chatId', item.chatId);
-
-      console.debug('xxx did', item.did);
-
-      console.log('xxx', item.intent);
-    });
-
-    console.error('xchatList', cList);
+    console.error('cList', cList);
   };
 
   const chatListHistory =
     chatList &&
     chatList?.map((item, index) =>
-      item.chatId && pCAIP10ToWallet(item.did) === selectedChat ? (
-        <div key={index} id={`chatListHistory` + index}>
-          <ChatViewComponentCard>
-            <ChatViewComponent
-              chatId={item.chatId}
-              limit={25}
-              isConnected={true}
-              autoConnect={false}
-            />
-          </ChatViewComponentCard>
-        </div>
+      item.chatId && item.did === selectedChat ? (
+        <Flex h={screenHeight - 600} key={index} justify="space-between">
+          <ChatViewComponent
+            chatId={item.chatId}
+            limit={8}
+            isConnected={true}
+            autoConnect={true}
+            chatViewList={true}
+            chatProfile={true}
+          />
+        </Flex>
       ) : null,
     );
 
@@ -264,56 +210,76 @@ function Chat() {
 
       const chatList = await fetchChatList(owner);
 
-      setSelectedChat(wAddress);
+      setSelectedChat(walletToPCAIP10(wAddress));
 
       console.warn('x messageReq', messageReq);
     }
   };
 
-  return owner ? (
-    <Stack>
-      <Text>All Conversations</Text>
-      <Flex py={16} justify="center" align="center" direction="row" wrap="wrap">
-        {chatListAllChat}
-      </Flex>
-
-      <Text>Your chat Address : {ownerAddress}</Text>
-      <Divider px={16} />
-      <Text>Selected Chat : {selectedChat}</Text>
-
-      <Box>
-        <form
-          onSubmit={form.onSubmit(
-            (values: { walletAddress: string; userMesssage: string }) => {
-              console.log(values);
-
-              sendMessage(values.walletAddress, values.userMesssage);
-            },
-          )}
+  return screenHeight === 0 && screenWidth === 0 ? (
+    <LoadingOverlay
+      visible={true}
+      zIndex={1000}
+      overlayProps={{ blur: 2, backgroundOpacity: 0.08, color: '#5541d9' }}
+      loaderProps={{ color: 'violet', type: 'dots', size: 128 }}
+    />
+  ) : (
+    <>
+      <LoadingOverlay
+        visible={!owner}
+        zIndex={1000}
+        overlayProps={{ blur: 2, backgroundOpacity: 0.08, color: '#5541d9' }}
+        loaderProps={{ color: 'violet', type: 'dots', size: 128 }}
+      />
+      <Stack h={screenHeight - 200}>
+        <Text>All Conversations</Text>
+        <Flex
+          py={16}
+          justify="center"
+          align="center"
+          direction="row"
+          wrap="wrap"
+          gap={16}
         >
-          <TextInput
-            label="Wallet Address"
-            placeholder="Wallet Address"
-            {...form.getInputProps('walletAddress')}
-          />
-          <TextInput
-            label="Your message"
-            placeholder="Your Message"
-            {...form.getInputProps('userMesssage')}
-          />
-          <Button
-            type="submit"
-            mt="md"
-            size={'sm'}
-            fullWidth
-            loading={isSendingMessage}
-            disabled={isSendingMessage}
+          {chatListAllChat}
+        </Flex>
+
+        <Text>Your chat Address : {ownerAddress}</Text>
+        <Divider px={16} />
+        <Text>Selected Chat : {selectedChat}</Text>
+
+        <Box>
+          <form
+            onSubmit={form.onSubmit(
+              (values: { walletAddress: string; userMesssage: string }) => {
+                console.log(values);
+
+                sendMessage(values.walletAddress, values.userMesssage);
+              },
+            )}
           >
-            Start a chat
-          </Button>
-        </form>
-      </Box>
-      <SocketContext.Provider value={socketData}>
+            <TextInput
+              label="Wallet Address"
+              placeholder="Wallet Address"
+              {...form.getInputProps('walletAddress')}
+            />
+            <TextInput
+              label="Your message"
+              placeholder="Your Message"
+              {...form.getInputProps('userMesssage')}
+            />
+            <Button
+              type="submit"
+              mt="md"
+              size={'sm'}
+              fullWidth
+              loading={isSendingMessage}
+              disabled={isSendingMessage}
+            >
+              Start a chat
+            </Button>
+          </form>
+        </Box>
         <AccountContext.Provider value={{ pgpPrivateKey, setSpaceId }}>
           <ChatUIProvider
             theme={darkChatTheme}
@@ -325,11 +291,7 @@ function Chat() {
             {chatListHistory}
           </ChatUIProvider>
         </AccountContext.Provider>
-      </SocketContext.Provider>
-    </Stack>
-  ) : (
-    <>
-      <Text>Please Sign-in to chat</Text>
+      </Stack>
     </>
   );
 }
