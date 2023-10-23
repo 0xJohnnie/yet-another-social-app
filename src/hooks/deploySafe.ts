@@ -31,8 +31,6 @@ const deploySafe = async (ownerAddress: string): Promise<string> => {
       signerOrProvider: deployerSigner,
     });
 
-    const privateSigner = new ethers.Wallet(process.env.DEPLOYER_KEY, provider);
-
     const safeAccConfig: SafeAccountConfig = {
       owners: [ownerAddress],
       threshold: 1,
@@ -52,10 +50,12 @@ const deploySafe = async (ownerAddress: string): Promise<string> => {
 
     const safeSdk: Safe = await sf.deploySafe({
       safeAccountConfig: safeAccConfig,
-      options: {
+      /*      
+ options: {
         maxFeePerGas: process.env.NEXT_PUBLIC_MAX_GAS_FEE,
         maxPriorityFeePerGas: process.env.NEXT_PUBLIC_MAX_GAS_FEE,
-      },
+      }, 
+      */
     });
 
     console.log(
@@ -67,7 +67,10 @@ const deploySafe = async (ownerAddress: string): Promise<string> => {
     );
 
     const safeAdd = await safeSdk.getAddress();
+    /* 
 
+    const privateSigner = new ethers.Wallet(process.env.DEPLOYER_KEY, provider);
+    
     const faucetAmount = ethers.utils.parseUnits('0.001', 'ether').toString();
 
     const tx = await privateSigner.sendTransaction({
@@ -77,7 +80,8 @@ const deploySafe = async (ownerAddress: string): Promise<string> => {
     });
 
     console.log('Sent! 🎉');
-    console.log(`TX hash: ${tx.hash}`);
+    console.log(`TX hash: ${tx.hash}`); 
+    */
 
     console.warn('deployer address ', await deployerSigner.getAddress());
     console.warn('owner address', ownerAddress);

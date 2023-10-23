@@ -242,6 +242,7 @@ const AuthKitProvider = ({ children }: { children: any }) => {
 
         const safeAdd = await deploySafe(eoa);
 
+        /* 
         const txData: MetaTransactionData[] = [
           {
             to: ownerAddress,
@@ -251,7 +252,7 @@ const AuthKitProvider = ({ children }: { children: any }) => {
           },
         ];
 
-        /*     const web3Provider = new ethers.providers.Web3Provider(provider)
+     const web3Provider = new ethers.providers.Web3Provider(provider)
     const { gelatoTaskId :gId } = await gelatoRelay(
       txData,
       safeAddress,
