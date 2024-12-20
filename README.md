@@ -2,6 +2,19 @@
 
 A social dApp that supports Account Abstraction
 
+## Note
+The app is currently not functional, I have a walkthrough video and screenshots available for reference.
+
+### Walkthrough video
+https://github.com/user-attachments/assets/4913422a-6a10-44a2-b221-831579d15811
+
+### Gas sponsorship via Gelato Network
+![Gas sponsorship via Gelato Network](https://github.com/user-attachments/assets/71d633da-869e-4c31-b223-49d24b2e4136)
+
+### Wallet-to-wallet communication via Push Protocol
+( Wallet A and Wallet B shown side-by-side to showcase the messaging process
+![Wallet-to-wallet communication via Push Protocol](https://github.com/user-attachments/assets/4b844f05-7c8d-4842-a970-6e72e5196020)
+
 ## Purpose
 
 YASA offers a unified platform that enables social interation between wallets on different blockchains
